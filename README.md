@@ -44,7 +44,7 @@ Capstone Project for Berkley HAAS (ML &amp; AI)
 
 # Exploratory Data Analysis
 
-File: [01_EDA_.ipynb](01_EDA_.ipynb)
+File: [01_EDA.ipynb](01_EDA.ipynb)
 
 ## 1. Cleaning
 
