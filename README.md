@@ -44,7 +44,7 @@ Capstone Project for Berkley HAAS (ML &amp; AI)
 
 # Exploratory Data Analysis
 
-File: [01_EDA_.ipynb](01_EDA_.ipynb)
+File: [01_EDA.ipynb](01_EDA.ipynb)
 
 ## 1. Cleaning
 
@@ -123,6 +123,9 @@ __1. Impact of Income on LoanAmount, with Purpose of Loan__
 
   
 
+
+
+
 __2. Impact of InterestRate on LoanAmount, with Purpose of Loan__
   <img src="images/bivariate_plots_LoanAmount_InterestRate_LoanPurpose_IncomeGroup.png" style="zoom:60%;" />
 
@@ -189,4 +192,91 @@ __6. Analysis of LoanAmount for each HasMortgage category__
 |   50% |     43.000 |  82466.000 | 127556.000 |     574.000 |         60.000 |          2.000 |       13.460 |     36.000 |      0.500 | 0.000      |
 |   75% |     56.000 | 116219.000 | 188985.000 |     712.000 |         90.000 |          3.000 |       19.250 |     48.000 |      0.700 | 0.000      |
 |   max |     69.000 | 149999.000 | 249999.000 |     849.000 |        119.000 |          4.000 |       25.000 |     60.000 |      0.900 | 1.000      |
+
+---
+
+# Phase II (Proposal)
+
+---
+
+<img src="images/Classification.png" style="zoom:100%;" />
+
+
+This criterion is linked to a Learning OutcomeModeling:
+
+## 1. Metric 
+
+The choice of metrics depends on what exactly we are trying to answer. As per the problem statement,
+
+> One of the primary objectives of companies with financial loan services is to decrease payment defaults and ensure that individuals are paying back their loans as expected.
+
+The question we, want to answer is 
+
+> How do we predict which individuals are at the highest risk of defaulting on their loans, so that proper interventions can be effectively deployed to the right audience.?
+
+In technical terms we would like to identity majority of our `True Positives` and reduce `False Negative` . 
+1. __Recall (Sensitivity)__ is a metric, that measures proportion of correctly predicted positive observations. It answers the question: “**Out of all actual positives, how many did the model capture?**”. 
+
+   $\large Recall\; (Sensitivity)= \Large  \frac{TPs}{(TPs + FNs)}$
+
+   Thus to achieve high `Precision Score` we would to increase True Positives (TP) and recduce False Positive (FP) 
+
+Additionally, we also would like to reduce False Positive, this will make the model more pessimistic and loss of opportunity of more applications are rejected or more resources are wasted if more application are scrutinised.
+
+2. __Precision__ score's focus is **out of the predictions made by the model, what percent is correct>?**
+
+    $\large Precision\; (Sensitivity)= \Large  \frac{TPs}{(TPs + FPs)}$
+
+    Thus, Model should be able to capture majority of `True Positives` and also reduce `False Positives`
+
+Unbalanced dataset particularly are need additional Consideration.  
+
+3. __F1 score__ is essential because it balances precision and recall, providing a single metric that considers both FPs and FNs. 
+
+    $\large F1\; = 2* \Large \frac{Recall\; *\; Precision }{(Recall\; +\; Precision)}$
+
+__Thus to conclude, the 3 Metrics for evaluation will be__
+1. Recall (Sensitivity) Score
+2. Precision Score
+3. F1 Score
+
+---
+
+## Classification Algorithm
+
+
+Two Algorithms  which will be suitable for to evaluate the model for is
+1.  Linear Algorithm
+    -  LogistisRegression with Polynomial Features (with/without class weight)    
+      
+2.  Non-Linear Algorithm
+    -  Decision Tree (with/without class weight) 
+
+3.  Ensemble Algorithm
+    -  Boosting 
+    -  Bagging (e.g BalancedBaggingClassifier)
+
+Alternatively
+
+3. Prior to Modeling use __Data Sampling Algorithms__
+    1. Random under sampling
+    2. Random over sampling
+    3. Combonition of both, _over_ and _under_ Sampling (E.g. Smote + Tomek)
+
+---
+
+## Transformers
+
+|Column | Transformation |Notes|
+|:--|:--|:--|
+|Education|OneHotEncoding||
+|EmploymentType|OneHotEncoding||
+|MaritalStatus|OneHotEncoding||
+|LoanPurpose|OneHotEncoding||
+|HasMortgage|OneHotEncoding |Option: `drop=if_binary`|
+|HasDependents|OneHotEncoding |Option: `drop=if_binary`|
+|HasCoSigner|OneHotEncoding |Option: `drop=if_binary`|
+|LoanTerm|OrdinalEncoder|
+
+
 
