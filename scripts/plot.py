@@ -1,4 +1,5 @@
 import pandas as pd
+import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
@@ -223,4 +224,47 @@ def bivariate_gridplot_category(df, _x, _y, _hue='Default'):
     fig.suptitle(f"Relation of Loan Defaulters with {_x} and {_y}", fontsize=20)
     
     plt.savefig(f"images/bivariate_gridplot_category_{_x}_{_y}_{_hue}.png")
+    plt.show()
+
+def plot_two_score(df, y1, y1_range, y1_label,y2, y2_range, y2_label, title):
+    width = 0.3
+    font = {'family': 'sans-serif', 'color':  '#7f5539', 'weight': 'regular', 'size': 14}
+    
+    x = np.arange(len(df.index))  
+    y1 = df[y1]  
+    y2 = df[y2]   
+    
+    fig, ax1 = plt.subplots(layout="constrained", figsize=(16, 7))
+    
+    bars1 = ax1.bar(x - width/2, y1, width=width, color='#9b9b7a', alpha=0.7, label=y1_label)
+    
+    # Set the y-axis limits and label for the first feature
+    ax1.set_ylim(y1_range[0], y1_range[1])
+    ax1.set_ylabel(y1_label, color='#9b9b7a', fontdict=font)
+    ax1.tick_params(axis='y', labelcolor='#9b9b7a')
+    
+    # Create a second y-axis that shares the same x-axis
+    ax2 = ax1.twinx()
+    
+    
+    # Plot the second feature on ax2 (right y-axis)
+    bars2 = ax2.bar(x + width/2, y2, width=width, color='#7f5539', alpha=0.7, label=y2_label)
+    
+    # Set the y-axis limits and label for the second feature
+    ax2.set_ylim(0, 0.04)
+    ax2.set_ylabel(y2_label, color='#7f5539', fontdict=font)
+    ax2.tick_params(axis='y', labelcolor='#7f5539')
+    
+    # Configure the x-axis labels (optional)
+    font['size']=12
+    ax1.set_xticks(x)
+    ax1.set_xticklabels([f'{i}' for i in df.index], rotation=45, ha='right', fontdict=font)
+    
+    # Create a combined legend
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
+    
+    plt.title(title)
+    plt.tight_layout()
     plt.show()
