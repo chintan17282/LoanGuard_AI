@@ -896,7 +896,7 @@ These are bottom 30% in both filters
 
   - Estimators: **BalancedRandomForest**, **CatBoostClassifier**, **RandomForestClassifier**
 
-  | Score           |
+  | Score           | ------ |
   | --------------- | ------ |
   | Recall Score    | 67.69% |
   | Precision Score | 21.75% |
