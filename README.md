@@ -195,12 +195,56 @@ __6. Analysis of LoanAmount for each HasMortgage category__
 
 ---
 
-# Phase II (Proposal)
+# Feature Selection
+
+**Notebook**: [02_FeatureSelection.ipynb](02_FeatureSelection.ipynb)
+
+### 1. Categorial 
+<img src="images/feature_selection_category.png" alt="Categorial Feature Selection" style="zoom:80%;" />
+
+#### Below variables have least impact on target variable. 
+These are bottom 30% in both filters
+- LoanPurpose (Auto, Education, Others)
+
+#### Highest impact features on target variable, these are top 10 by both filters
+- Education (High School, Master's)
+- EmploymentType (Full-time)
+- HasDependents (Yes, No)
+- HasCoSigner (Yes, No)
+- HasMortgage (Yes, No)
+- MaritalStatus_(Married, Divorced)
+
+
+### 2. Numerical 
+
+#### Age
+<img src="images/feature_selection_numerical_Age.png" alt="Age" style="zoom:80%;" />
+
+#### Income
+<img src="images/feature_selection_numerical_Income.png" alt="Income" style="zoom:80%;" />
+
+#### InterestRate
+<img src="images/feature_selection_numerical_InterestRate.png" alt="InterestRate" style="zoom:80%;" />
+
+#### LoanAmount
+<img src="images/feature_selection_numerical_LoanAmount.png" alt="LoanAmount" style="zoom:80%;" />
+
+#### MonthsEmployed
+<img src="images/feature_selection_numerical_MonthsEmployed.png" alt="MonthsEmployed" style="zoom:80%;" />
+
+#### DTIRatio
+<img src="images/feature_selection_numerical_DTIRatio.png" alt="DTIRatio" style="zoom:80%;" />
+
+#### Highest impact numerical features on target variable
+Using Mutual Information with mutual_info_classif()
+- Age, Income, NumCreditLines, InterestRate, LoanTerm are top 5 picks
+
+#### Least impact numerical features on target variable
+- DTIRatio and CreditScore are least contributing features
 
 ---
-
+# Classification
 <img src="images/Classification.png" style="zoom:100%;" />
-
 
 This criterion is linked to a Learning OutcomeModeling:
 
@@ -242,41 +286,630 @@ __Thus to conclude, the 3 Metrics for evaluation will be__
 
 ---
 
+## Transformers
+
+| Column         | Transformation | Notes                    |
+| :------------- | :------------- | :----------------------- |
+| Education      | OneHotEncoding |                          |
+| EmploymentType | OneHotEncoding |                          |
+| MaritalStatus  | OneHotEncoding |                          |
+| LoanPurpose    | OneHotEncoding |                          |
+| HasMortgage    | OneHotEncoding | Option: `drop=if_binary` |
+| HasDependents  | OneHotEncoding | Option: `drop=if_binary` |
+| HasCoSigner    | OneHotEncoding | Option: `drop=if_binary` |
+| LoanTerm       | OrdinalEncoder |                          |
+
+
 ## Classification Algorithm
 
-
 Two Algorithms  which will be suitable for to evaluate the model for is
-1.  Linear Algorithm
+Based on the observation, we had seen, the data is non-linear. Thus first we would like to  
+
+1.  Non-Linear Algorithm
+    -  K-Nearest Neighbours
+    -  Decision Tree (with/without class weight)
+
+We would also like to give Linear Algirithm a shot, thus
+
+2.  Linear Algorithm 
     -  LogistisRegression with Polynomial Features (with/without class weight)    
-      
-2.  Non-Linear Algorithm
-    -  Decision Tree (with/without class weight) 
+
+If the models are determined to be weak, we will use following Ensemble algorithm
 
 3.  Ensemble Algorithm
-    -  Boosting 
-    -  Bagging (e.g BalancedBaggingClassifier)
+    -  Boosting (CatBoostClassifier, XGBClassifier)
+    -  Bagging (e.g RandomForestClassifier, BalancedBaggingClassifier)
+    -  StackingClassifier and VotingClassifier
 
-Alternatively
-
-3. Prior to Modeling use __Data Sampling Algorithms__
+4.  Prior to Modeling use __Data Sampling Algorithms__ to balance Dataset
     1. Random under sampling
     2. Random over sampling
-    3. Combonition of both, _over_ and _under_ Sampling (E.g. Smote + Tomek)
+    3. Smote,Tomek, SMOTETomek
+    4. PolynomialFeatures + PCA
 
 ---
 
-## Transformers
+# Algorithms
+---
 
-|Column | Transformation |Notes|
-|:--|:--|:--|
-|Education|OneHotEncoding||
-|EmploymentType|OneHotEncoding||
-|MaritalStatus|OneHotEncoding||
-|LoanPurpose|OneHotEncoding||
-|HasMortgage|OneHotEncoding |Option: `drop=if_binary`|
-|HasDependents|OneHotEncoding |Option: `drop=if_binary`|
-|HasCoSigner|OneHotEncoding |Option: `drop=if_binary`|
-|LoanTerm|OrdinalEncoder|
+## 1. K-Nearest Neighbor	
+
+#### Steps
+
+1. Column Transformation
+2. Undersampling the majority class using **`RandomUnderSampler`** 
+3. **GridSearchCV + K-Nearest Neighbor**
+
+#### Notebook
+
+- [03_KNN-UnderSampling.ipynb](03_KNN-UnderSampling.ipynb)
+
+#### Scores
+
+| Evaluator         | Score   |
+| ----------------- | ------- |
+| Training Accuracy | 100.00% |
+| Test Accuracy     | 59.89%  |
+| Recall Score      | 15.25%  |
+| Precision Score   | 25.00%  |
+| Accuracy Score    | 84.80%  |
+| F1 Score          | 18.95%  |
+| ROC AUC Score     | 60.92%  |
+
+#### Custom Threshold
+
+| threshold | recall | precision | f1-score | accuracy |
+| :-------- | -----: | --------: | -------: | -------- |
+| 0.300     |  0.950 |     0.127 |    0.224 | 0.233    |
+| 0.400     |  0.825 |     0.142 |    0.242 | 0.399    |
+| 0.500     |  0.623 |     0.169 |    0.266 | 0.599    |
+| 0.600     |  0.365 |     0.204 |    0.262 | 0.760    |
+| 0.700     |  0.153 |      0.25 |    0.189 | 0.848    |
+
+---
+
+
+
+## 2. K-Nearest Neighbor, balance with TomekLinks
+
+#### Steps
+
+1. Column Transformation
+2. Using  **`TomekLinks`** to Unbalanced dataset
+3. **GridSearchCV + K-Nearest Neighbor**
+
+#### Notebook
+
+- [04_KNN-TomekLinks.ipynb](04_KNN-TomekLinks.ipynb)
+
+#### Scores
+
+| Evaluator         | Score   |
+| :---------------- | ------- |
+| Training Accuracy | 100.00% |
+| Test Accuracy     | 87.92%  |
+| Recall Score      | 0.29%   |
+| Precision Score   | 46.43%  |
+| Accuracy Score    | 88.35%  |
+| F1 Score          | 0.58%   |
+| ROC AUC Score     | 51.14%  |
+
+#### Custom Threshold
+
+| threshold | recall | precision | f1-score | accuracy |
+| :-------- | -----: | --------: | -------: | -------- |
+| 0.300     |  0.194 |     0.241 |    0.215 | 0.835    |
+| 0.400     |  0.089 |     0.292 |    0.137 | 0.869    |
+| 0.500     |  0.032 |     0.316 |    0.058 | 0.879    |
+| 0.600     |  0.011 |     0.388 |    0.021 | 0.883    |
+| 0.700     |  0.003 |     0.464 |    0.006 | 0.883    |
+
+---
+
+
+
+## 3. K-Nearest Neighbor, balance with SMOTE
+
+#### Steps
+
+1. Column Transformation
+2. Using  **`SMOTE`** to Unbalanced dataset
+3. **GridSearchCV + K-Nearest Neighbor**
+
+#### Notebook
+
+- [05_KNN-SMOTE.ipynb](05_KNN-SMOTE.ipynb)
+
+#### Scores
+
+| Evaluator         | Score   |
+| :---------------- | ------- |
+| Training Accuracy | 100.00% |
+| Test Accuracy     | 87.92%  |
+| Recall Score      | 0.29%   |
+| Precision Score   | 46.43%  |
+| Accuracy Score    | 88.35%  |
+| F1 Score          | 0.58%   |
+| ROC AUC Score     | 51.14%  |
+
+#### Custom Threshold
+
+| threshold | recall | precision | f1-score | accuracy |
+| :-------- | -----: | --------: | -------: | -------- |
+| 0.300     |  0.604 |     0.157 |    0.249 | 0.575    |
+| 0.400     |  0.495 |     0.165 |    0.248 | 0.649    |
+| 0.500     |  0.472 |     0.167 |    0.247 | 0.664    |
+| 0.600     |  0.364 |     0.176 |    0.238 | 0.728    |
+| 0.700     |  0.330 |     0.182 |    0.234 | 0.749    |
+
+---
+
+
+
+## 4. Decision Tree
+
+#### Steps
+
+1. Column Transformation
+2. Determine approx range if all parameters for Decision Tree
+3. **GridSearchCV + Decision Tree**
+
+#### Notebook
+
+- [06_DecisionTree.ipynb](06_DecisionTree.ipynb)
+
+#### Scores
+
+| Evaluators         | Score  |
+| :---------------- | ------ |
+| Training Accuracy | 54.25% |
+| Test Accuracy     | 54.14% |
+| Recall Score      | 41.54% |
+| Precision Score   | 25.32% |
+| Accuracy Score    | 79.09% |
+| F1 Score          | 31.47% |
+| ROC AUC Score     | 64.40% |
+
+#### Custom Threshold
+
+| threshold | recall | precision | f1-score | accuracy |
+| --------- | :----: | :-------: | :------: | :------: |
+| 0.300     | 0.962  |   0.129   |  0.227   |  0.243   |
+| 0.400     | 0.838  |   0.155   |  0.261   |  0.452   |
+| 0.500     | 0.777  |   0.172   |  0.281   |  0.541   |
+| 0.600     | 0.511  |   0.236   |  0.323   |  0.753   |
+| 0.700     | 0.415  |   0.253   |  0.315   |  0.791   |
+
+---
+
+
+
+## 5 DecisionTree with Pruning and fitting with BayesSearchCV
+
+#### Steps
+
+1. Column Transformation
+2. Determine approx range if all parameters for Decision Tree
+3. **`Prune`** and **`BayesSearchCV`** with different values of **`ccp_alphas`**
+
+#### Notebook
+
+- [06_DecisionTree.ipynb](06_DecisionTree.ipynb)
+
+#### Scores
+
+| Evaluators       | Score  |
+| :---------------- | ------ |
+| Training Accuracy | 67.69% |
+| Test Accuracy     | 67.01% |
+| Recall Score      | 29.17% |
+| Precision Score   | 31.49% |
+| Accuracy Score    | 84.49% |
+| F1 Score          | 30.29% |
+| ROC AUC Score     | 66.16% |
+
+#### Custom Threshold
+
+| threshold | recall | precision | f1-score | accuracy |
+| --------- | :----: | :-------: | :------: | :------: |
+| 0.300     | 0.894  |   0.148   |  0.255   |  0.395   |
+| 0.400     | 0.794  |   0.174   |  0.286   |  0.541   |
+| 0.500     | 0.651  |   0.206   |  0.313   |  0.670   |
+| 0.600     | 0.516  |   0.251   |  0.337   |  0.766   |
+| 0.700     | 0.292  |   0.315   |  0.303   |  0.845   |
+
+
+
+---
+
+## 6. BalancedRandomForest
+
+#### Steps
+
+1. Column Transformation
+2. Determine approx range if all parameters for Decision Tree
+3. **GridSearchCV + BalancedRandomForestClassifier**
+
+#### Notebook
+
+- [07_Ensemble_BalancedRandomForest.ipynb](07_Ensemble_BalancedRandomForest.ipynb)
+
+#### Scores
+
+| Evaluators       | Score  |
+| :---------------- | ------ |
+| Training Accuracy | 64.17% |
+| Test Accuracy     | 55.48% |
+| Recall Score      | 44.95% |
+| Precision Score   | 23.99% |
+| Accuracy Score    | 77.19% |
+| F1 Score          | 31.28% |
+| ROC AUC Score     | 64.71% |
+
+#### Custom Threshold
+
+| threshold | recall | precision | f1-score | accuracy |
+| --------- | :----: | :-------: | :------: | :------: |
+| 0.300     | 0.939  |   0.137   |  0.239   |  0.311   |
+| 0.400     | 0.851  |   0.155   |  0.262   |  0.446   |
+| 0.500     | 0.767  |   0.175   |  0.285   |  0.555   |
+| 0.600     | 0.605  |   0.206   |  0.308   |  0.685   |
+| 0.700     | 0.449  |   0.240   |  0.313   |  0.772   |
+
+
+---
+
+## 7. CatBoostClassifier
+
+#### Steps
+
+1. Column Transformation
+2. **CatBoostClassifier**
+
+#### Notebook
+
+- [08_Ensemble-CatBoost.ipynb](08_Ensemble-CatBoost.ipynb)
+
+#### Scores
+
+|      | Evaluators         | Score  |
+| ---: | :---------------- | ------ |
+|    0 | Training Accuracy | 65.98% |
+|    1 | Test Accuracy     | 65.24% |
+|    2 | Recall Score      | 41.36% |
+|    3 | Precision Score   | 32.73% |
+|    4 | Accuracy Score    | 83.40% |
+|    5 | F1 Score          | 36.54% |
+|    6 | ROC AUC Score     | 68.51% |
+
+#### Custom Threshold
+
+| threshold | recall | precision | f1-score | accuracy |
+| --------- | :----: | :-------: | :------: | :------: |
+| 0.300     | 0.927  |   0.149   |  0.257   |  0.380   |
+| 0.400     | 0.842  |   0.175   |  0.290   |  0.524   |
+| 0.500     | 0.728  |   0.210   |  0.326   |  0.652   |
+| 0.600     | 0.585  |   0.257   |  0.357   |  0.757   |
+| 0.700     | 0.414  |   0.327   |  0.365   |  0.834   |
+
+---
+
+
+## 8. CatBoostClassifier, balance with SMOTETomek
+
+#### Steps
+
+1. Column Transformation
+2. SMOTETomek to balance the dataset
+3. **XGBClassifier**
+
+#### Notebook
+
+- [09_Ensemble-SMOTETomek-CatBoost.ipynb](09_Ensemble-SMOTETomek-CatBoost.ipynb)
+
+#### Scores
+
+| Evaluators         | Score  |
+| :---------------- | ------ |
+| Training Accuracy | 74.10% |
+| Test Accuracy     | 53.73% |
+| Recall Score      | 56.73% |
+| Precision Score   | 25.73% |
+| Accuracy Score    | 76.09% |
+| F1 Score          | 35.41% |
+| ROC AUC Score     | 66.23% |
+
+#### Custom Threshold
+
+| threshold | recall | precision | f1-score | accuracy |
+| --------- | :----: | :-------: | :------: | :------: |
+| 0.300     | 0.956  |   0.138   |  0.241   |  0.305   |
+| 0.400     | 0.905  |   0.155   |  0.265   |  0.419   |
+| 0.500     | 0.825  |   0.177   |  0.292   |  0.537   |
+| 0.600     | 0.719  |   0.210   |  0.325   |  0.654   |
+| 0.700     | 0.567  |   0.257   |  0.354   |  0.761   |
+
+---
+
+
+
+## 9. XGBoost
+
+#### Steps
+
+1. Column Transformation
+2. **XGBClassifier**
+
+#### Notebook
+
+- [10_Ensemble-XGBoost.ipynb](10_Ensemble-XGBoost.ipynb)
+
+#### Scores
+
+| Evaluators         | Score  |
+| :---------------- | ------ |
+| Training Accuracy | 73.94% |
+| Test Accuracy     | 70.96% |
+| Recall Score      | 33.07% |
+| Precision Score   | 33.92% |
+| Accuracy Score    | 84.83% |
+| F1 Score          | 33.49% |
+| ROC AUC Score     | 67.52% |
+
+#### Custom Threshold
+
+| threshold | recall | precision | f1-score | accuracy |
+| --------- | :----: | :-------: | :------: | :------: |
+| 0.300     | 0.855  |   0.164   |  0.275   |  0.479   |
+| 0.400     | 0.748  |   0.191   |  0.304   |  0.605   |
+| 0.500     | 0.631  |   0.227   |  0.334   |  0.710   |
+| 0.600     | 0.489  |   0.276   |  0.353   |  0.793   |
+| 0.700     | 0.331  |   0.339   |  0.335   |  0.848   |
+
+---
+
+
+
+## 10. RandomForestClassifier
+
+#### Steps
+
+1. Column Transformation
+2. **RandomForestClassifier**
+
+#### Notebook
+
+- [11_Ensemble_RandomForest.ipynb](11_Ensemble_RandomForest.ipynb)
+
+#### Scores
+
+| Evaluator         | Score  |
+| :---------------- | ------ |
+| Training Accuracy | 66.20% |
+| Test Accuracy     | 66.21% |
+| Recall Score      | 2.10%  |
+| Precision Score   | 63.92% |
+| Accuracy Score    | 88.55% |
+| F1 Score          | 4.07%  |
+| ROC AUC Score     | 66.89% |
+
+#### Custom Threshold
+
+| threshold | recall | precision | f1-score | accuracy |
+| --------- | :----: | :-------: | :------: | :------: |
+| 0.300     | 0.993  |   0.120   |  0.215   |  0.162   |
+| 0.400     | 0.898  |   0.151   |  0.258   |  0.403   |
+| 0.500     | 0.678  |   0.207   |  0.317   |  0.662   |
+| 0.600     | 0.345  |   0.316   |  0.330   |  0.838   |
+| 0.700     | 0.021  |   0.639   |  0.041   |  0.886   |
+
+---
+
+
+
+## 11 StackingClassifier
+
+#### Steps
+
+1. Column Transformation
+2. Estimators: **BalancedRandomForest**, **CatBoostClassifier**, **RandomForestClassifier**
+   1. Final Estimator: **DecisionTree**
+
+#### Notebook
+
+- [12_Ensemble-Stacking-Voting.ipynb](12_Ensemble-Stacking-Voting.ipynb)
+
+#### Scores
+
+| Evaluator         | Score  |
+| :---------------- | ------ |
+| Training Accuracy | 73.90% |
+| Test Accuracy     | 71.98% |
+| Recall Score      | 34.14% |
+| Precision Score   | 18.85% |
+| Accuracy Score    | 75.42% |
+| F1 Score          | 24.29% |
+| ROC AUC Score     | 58.22% |
+
+#### Custom Threshold
+
+| threshold | recall | precision | f1-score | accuracy |
+| --------- | :----: | :-------: | :------: | :------: |
+| 0.300     | 0.438  |   0.175   |  0.250   |  0.697   |
+| 0.400     | 0.421  |   0.178   |  0.250   |  0.708   |
+| 0.500     | 0.403  |   0.181   |  0.250   |  0.720   |
+| 0.600     | 0.376  |   0.182   |  0.246   |  0.733   |
+| 0.700     | 0.341  |   0.189   |  0.243   |  0.754   |
+
+---
+
+
+
+## 12. VotingClassifier
+
+#### Steps
+
+1. Column Transformation
+2. Estimators: **BalancedRandomForest**, **CatBoostClassifier**, **RandomForestClassifier**
+
+#### Notebook
+
+- [12_Ensemble-Stacking-Voting.ipynb](12_Ensemble-Stacking-Voting.ipynb)
+
+#### Scores
+
+| Evaluator         | Score  |
+| :---------------- | ------ |
+| Training Accuracy | 74.83% |
+| Test Accuracy     | 68.13% |
+| Recall Score      | 67.69% |
+| Precision Score   | 21.75% |
+| Accuracy Score    | 68.13% |
+| F1 Score          | 32.92% |
+| ROC AUC Score     | 67.94% |
+
+#### Custom Threshold
+
+| threshold | recall | precision | f1-score | accuracy |
+| --------- | :----: | :-------: | :------: | :------: |
+| 0.300     | 0.926  |   0.146   |  0.252   |  0.364   |
+| 0.400     | 0.816  |   0.176   |  0.289   |  0.536   |
+| 0.500     | 0.677  |   0.217   |  0.329   |  0.681   |
+| 0.600     | 0.496  |   0.273   |  0.352   |  0.789   |
+| 0.700     | 0.298  |   0.361   |  0.327   |  0.858   |
+
+---
+
+
+
+## 13. LogisticRegression, with PCA 
+
+#### Steps
+
+1. Column Transformation
+2. PCA
+3. **LogisticRegression**
+
+#### Notebook
+
+- [13_LogisticRegression-PCA.ipynb](13_LogisticRegression-PCA.ipynb)
+
+#### Scores
+
+|        Evaluator  | Score   |
+| ----------------: | ------- |
+| Training Accuracy | 88.44%  |
+|     Test Accuracy | 88.53%  |
+|      Recall Score | 0.03%   |
+|   Precision Score | 100.00% |
+|    Accuracy Score | 88.45%  |
+|          F1 Score | 0.07%   |
+|     ROC AUC Score | 51.14%  |
+
+#### Custom Threshold
+
+| threshold | recall | precision | f1-score | accuracy |
+| --------- | :----: | :-------: | :------: | :------: |
+| 0.300     | 0.209  |   0.404   |  0.275   |  0.873   |
+| 0.400     | 0.087  |   0.507   |  0.148   |  0.885   |
+| 0.500     | 0.025  |   0.583   |  0.048   |  0.885   |
+| 0.600     | 0.004  |   0.667   |  0.009   |  0.885   |
+| 0.700     | 0.000  |   1.000   |  0.001   |  0.885   |
+
+---
+
+## 14. LogisticRegression, with SMOTE and FeatureSelection
+
+#### Steps
+
+1. Column Transformation
+2. SMOTE
+3. FeatureSelection
+4. **LogisticRegression**
+
+#### Notebook
+
+- [14_LogisticRegression_SMOTETomek.ipynb](14_LogisticRegression_SMOTETomek.ipynb)
+
+#### Scores
+
+| Evaluator         | Score  |
+| :---------------- | ------ |
+| Training Accuracy | 70.31% |
+| Test Accuracy     | 68.95% |
+| Recall Score      | 37.03% |
+| Precision Score   | 33.80% |
+| Accuracy Score    | 84.35% |
+| F1 Score          | 35.34% |
+| ROC AUC Score     | 68.74% |
+
+#### Custom Threshold
+
+| threshold | recall | precision | f1-score | accuracy |
+| --------- | :----: | :-------: | :------: | :------: |
+| 0.300     | 0.887  |   0.160   |  0.271   |  0.449   |
+| 0.400     | 0.797  |   0.188   |  0.304   |  0.578   |
+| 0.500     | 0.685  |   0.224   |  0.338   |  0.690   |
+| 0.600     | 0.539  |   0.269   |  0.359   |  0.778   |
+| 0.700     | 0.370  |   0.338   |  0.353   |  0.843   |
+
+---
+
+
+
+
+
+# Business Recommendation
+
+## For Numerical Features
+
+#### Highest impact numerical features on target variable
+
+Using Mutual Information with mutual_info_classif()
+
+- Age, Income, NumCreditLines, InterestRate, LoanTerm are top 5 picks
+
+#### Least impact numerical features on target variable
+
+- DTIRatio and CreditScore are least contributing features
+
+## For Categorial Features
+
+#### Below variables have least impact on target variable. 
+
+These are bottom 30% in both filters
+
+- LoanPurpose (Auto, Education, Others)
+
+#### Highest impact features on target variable, these are top 10 by both filters
+
+- Education (High School, Master's)
+- EmploymentType (Full-time)
+- HasDependents (Yes, No)
+- HasCoSigner (Yes, No)
+- HasMortgage (Yes, No)
+- MaritalStatus_(Married, Divorced)
+
+## Proposed Model 
+
+- (Algorithm 12) **VotingClassifier**, 
+
+  - Estimators: **BalancedRandomForest**, **CatBoostClassifier**, **RandomForestClassifier**
+
+  | Score           | ------ |
+  | --------------- | ------ |
+  | Recall Score    | 67.69% |
+  | Precision Score | 21.75% |
+  | Accuracy Score  | 68.13% |
+  | F1 Score        | 32.92% |
+  | ROC AUC Score   | 67.94% |
+
+  <u>This algorithms ensures we are able to catch Defaulters about 68% of times.</u> 
+
+
+
+
+
 
 
 

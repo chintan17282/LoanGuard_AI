@@ -1,5 +1,5 @@
 ## Plotting
-FONT = 'Comic Sans MS'
+FONT = 'monospace'
 TITLE_FONT_SIZE = 16
 LABEL_FONT_SIZE = 14
 custom_palette = ['#fefae0', '#fefae0', '#d4a373', '#faedcd','#e9edc9']
